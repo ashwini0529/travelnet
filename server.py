@@ -1,8 +1,10 @@
 #Tornado Libraries
 from tornado.ioloop import IOLoop
 from tornado.escape import json_encode
-from tornado.web import RequestHandler, Application
+from tornado.web import RequestHandler, Application, asynchronous
 from tornado.httpserver import HTTPServer
+from tornado.httpclient import AsyncHTTPClient
+from tornado.gen import engine, Task
 
 #Other Libraries
 import sqlite3
@@ -22,12 +24,14 @@ class MainHandler(RequestHandler):
 		self.write("Welcome to travelnet")
 
 class ImageRateHandler(RequestHandler):
+	@asynchronous
+	@engine
 	def get(self):
 		img_url = self.get_argument('img','0')
+		client = AsyncHTTPClient()
+		response = yield client.fetch("http://apius.faceplusplus.com/v2/detection/detect?api_key=e2707513a30c55f950583457e8845ec1&api_secret=9cWd6oDOtFMmqhGT7mwPKphefakx52tI&url="+str(img_url))
 		js = []
-		url = 'http://apius.faceplusplus.com/v2/detection/detect?api_key=e2707513a30c55f950583457e8845ec1&api_secret=9cWd6oDOtFMmqhGT7mwPKphefakx52tI&url='+str(img_url)
-		page = urllib2.urlopen(url)
-		data = json.load(page)
+		data = json.loads(response.body)
 		latitude = self.get_argument('latitude','0')
 		longitude = self.get_argument('longitude','0')
 		for i in data['face']:
@@ -56,20 +60,18 @@ class ImageRateHandler(RequestHandler):
 				else:
 					rate = 1
 				return rate
-			def givePlaceName():
-				url = 'http://maps.googleapis.com/maps/api/geocode/json?latlng='+str(latitude)+','+str(longitude)+'&sensor=true'
-				page = urllib2.urlopen(url)
-				data = json.load(page)
-				address = data['results'][0]['formatted_address']
-				return address
+			response =yield client.fetch('http://maps.googleapis.com/maps/api/geocode/json?latlng='+str(latitude)+','+str(longitude)+'&sensor=true')
+			data = json.loads(response.body)
+			address = data['results'][0]['formatted_address']
 			rate = rating()
 			ageCategory = getAgeCategory()
-			address = givePlaceName()
 			_execute("""insert into upload (img_url, ageCategory, latitude, longitude, rating, gender, location) values ("{0}","{1}","{2}","{3}","{4}","{5}","{6}");""".format(img_url,ageCategory,latitude,longitude,rate,gender,address))
 			r = json.loads(json.dumps({'gender':gender, 'rating':rate, 'ageCategory': ageCategory}, sort_keys = True,indent=4, separators=(',', ': ')))
 			js.append(r)
 
 		self.write(dict(results=js))
+		self.finish()
+
 
 class DbViewHandler(RequestHandler):
 	def get(self):
