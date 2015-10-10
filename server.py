@@ -29,7 +29,7 @@ class ImageRateHandler(RequestHandler):
 	def get(self):
 		img_url = self.get_argument('img','0')
 		client = AsyncHTTPClient()
-		response = yield Task(client.fetch("http://apius.faceplusplus.com/v2/detection/detect?api_key=e2707513a30c55f950583457e8845ec1&api_secret=9cWd6oDOtFMmqhGT7mwPKphefakx52tI&url="+str(img_url)))
+		response = yield Task(client.fetch,"http://apius.faceplusplus.com/v2/detection/detect?api_key=e2707513a30c55f950583457e8845ec1&api_secret=9cWd6oDOtFMmqhGT7mwPKphefakx52tI&url="+str(img_url))
 		js = []
 		data = json.loads(response.body)
 		latitude = self.get_argument('latitude','0')
@@ -60,7 +60,7 @@ class ImageRateHandler(RequestHandler):
 				else:
 					rate = 1
 				return rate
-			response =yield Task(client.fetch('http://maps.googleapis.com/maps/api/geocode/json?latlng='+str(latitude)+','+str(longitude)+'&sensor=true'))
+			response =yield Task(client.fetch,'http://maps.googleapis.com/maps/api/geocode/json?latlng='+str(latitude)+','+str(longitude)+'&sensor=true')
 			data = json.loads(response.body)
 			address = data['results'][0]['formatted_address']
 			rate = rating()
@@ -101,7 +101,7 @@ class travelApiHandler(RequestHandler):
 		descriptionList.append('Hometown')
 		ways = '|'.join(locates)
 		client = AsyncHTTPClient()
-		response = yield Task(client.fetch('https://maps.googleapis.com/maps/api/directions/json?origin='+location+'&destination='+location+'&waypoints=optimize:true|'+ways+'&key=AIzaSyDVYEzlC_MuzKNDIwWzipvny3dkf4nSBVo'))
+		response = yield Task(client.fetch,'https://maps.googleapis.com/maps/api/directions/json?origin='+location+'&destination='+location+'&waypoints=optimize:true|'+ways+'&key=AIzaSyDVYEzlC_MuzKNDIwWzipvny3dkf4nSBVo')
 		data = json.loads(response.body)
 		count = 0
 		for i in data['routes'][0]['legs']:
@@ -172,7 +172,7 @@ application = Application([
 
 #main init
 if __name__ == "__main__":
-	port = int(os.environ.get('PORT',80))
+	port = int(os.environ.get('PORT',5000))
 	http_server = HTTPServer(application)
 	http_server.listen(port)
 	#print 'Listening to port http://127.0.0.1:%d' % port
