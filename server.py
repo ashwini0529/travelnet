@@ -84,6 +84,8 @@ class DbViewHandler(RequestHandler):
 places_img = {'Chennai': 'https://upload.wikimedia.org/wikipedia/commons/7/73/Chennai_Kathipara_bridge.jpg', 'Mumbai': 'https://upload.wikimedia.org/wikipedia/commons/6/66/Mumbai_skyline88907.jpg','Bangalore':'http://www.discoverbangalore.com/images/Slide1.jpg'}
 
 class travelApiHandler(RequestHandler):
+	@asynchronous
+	@engine
 	def get(self):
 		location = self.get_argument('location',0)
 		location = location.title()
@@ -99,9 +101,9 @@ class travelApiHandler(RequestHandler):
 		imgList.append(places_img[location])
 		descriptionList.append('Hometown')
 		ways = '|'.join(locates)
-		url = 'https://maps.googleapis.com/maps/api/directions/json?origin='+location+'&destination='+location+'&waypoints=optimize:true|'+ways+'&key=AIzaSyDVYEzlC_MuzKNDIwWzipvny3dkf4nSBVo'
-		page = urllib2.urlopen(url)
-		data = json.load(page)
+		client = AsyncHTTPClient()
+		response = yield client.fetch('https://maps.googleapis.com/maps/api/directions/json?origin='+location+'&destination='+location+'&waypoints=optimize:true|'+ways+'&key=AIzaSyDVYEzlC_MuzKNDIwWzipvny3dkf4nSBVo')
+		data = json.loads(response.body)
 		count = 0
 		for i in data['routes'][0]['legs']:
 			start = i['start_address']
@@ -112,7 +114,8 @@ class travelApiHandler(RequestHandler):
 			count = count+1
 			js.append(r)
 		self.write(dict(nearby=js))
-
+		self.finish()
+		
 class budgetApiHandler(RequestHandler):
 	def get(self):
 		city = self.get_argument('city',0)
