@@ -170,7 +170,7 @@ application = Application([
 
 #main init
 if __name__ == "__main__":
-	port = int(os.environ.get('PORT',5000))
+	port = int(os.environ.get('PORT',80))
 	http_server = HTTPServer(application)
 	http_server.listen(port)
 	#print 'Listening to port http://127.0.0.1:%d' % port
