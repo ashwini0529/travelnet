@@ -126,14 +126,15 @@ class budgetApiHandler(RequestHandler):
 		self.write(dict(hotels=hotel))
 
 class ratingApiHandler(RequestHandler):
+	@asynchronous
+	@engine
 	def get(self):
 		sum = 0
 		counter = 0
 		latitude = self.get_argument('latitude',0)
 		longitude = self.get_argument('longitude',0)
-		url = 'http://maps.googleapis.com/maps/api/geocode/json?latlng='+str(latitude)+','+str(longitude)+'&sensor=true'
-		page = urllib2.urlopen(url)
-		data = json.load(page)
+		response = yield Task(client.fetch,'http://maps.googleapis.com/maps/api/geocode/json?latlng='+str(latitude)+','+str(longitude)+'&sensor=true')
+		data = json.loads(response)
 		age = {'old_age':0,'youth':0,'teen':0,'kids':0}
 		address = data['results'][0]['formatted_address']
 		query = _execute(""" select * from upload where location = "{0}"; """.format(address))
@@ -159,6 +160,7 @@ class ratingApiHandler(RequestHandler):
 			age_group = "Kids"
 		averageRating = float(sum)/float(counter)
 		self.write(dict(age_group=age_group,rating=averageRating))
+		self.finish()
 
 #Application initialization
 application = Application([
@@ -172,7 +174,7 @@ application = Application([
 
 #main init
 if __name__ == "__main__":
-	port = int(os.environ.get('PORT',5000))
+	port = int(os.environ.get('PORT',80))
 	http_server = HTTPServer(application)
 	http_server.listen(port)
 	#print 'Listening to port http://127.0.0.1:%d' % port
