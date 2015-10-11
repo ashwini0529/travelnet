@@ -133,6 +133,7 @@ class ratingApiHandler(RequestHandler):
 		counter = 0
 		latitude = self.get_argument('latitude',12.9692)
 		longitude = self.get_argument('longitude',79.1559)
+		client = AsyncHTTPClient()
 		response = yield Task(client.fetch,'http://maps.googleapis.com/maps/api/geocode/json?latlng='+str(latitude)+','+str(longitude)+'&sensor=true')
 		data = json.loads(response)
 		age = {'old_age':0,'youth':0,'teen':0,'kids':0}
