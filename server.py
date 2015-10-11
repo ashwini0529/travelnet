@@ -135,7 +135,7 @@ class ratingApiHandler(RequestHandler):
 		longitude = self.get_argument('longitude',79.1559)
 		client = AsyncHTTPClient()
 		response = yield Task(client.fetch,'http://maps.googleapis.com/maps/api/geocode/json?latlng='+str(latitude)+','+str(longitude)+'&sensor=true')
-		data = json.loads(response)
+		data = json.loads(response.body)
 		age = {'old_age':0,'youth':0,'teen':0,'kids':0}
 		address = data['results'][0]['formatted_address']
 		query = _execute(""" select * from upload where location = "{0}"; """.format(address))
