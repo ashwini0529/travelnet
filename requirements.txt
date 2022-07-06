@@ -1,5 +1,5 @@
 tornado==4.2.1
-html5lib==0.999
+html5lib==0.999999999
 httplib2==0.8
 requests==2.2.1
 simplejson==3.3.1
